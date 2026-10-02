@@ -112,6 +112,28 @@ const useModel = (botId?: string | null, activeModels?: ActiveModels) => {
         supportReasoning: true,
       },
       {
+        modelId: 'claude-v4.8-opus',
+        label: t('model.claude-v4.8-opus.label'),
+        description: t('model.claude-v4.8-opus.description'),
+        supportMediaType: CLAUDE_SUPPORTED_MEDIA_TYPES,
+        supportReasoning: true,
+      },
+      {
+        modelId: 'claude-v5-opus',
+        label: t('model.claude-v5-opus.label'),
+        description: t('model.claude-v5-opus.description'),
+        supportMediaType: CLAUDE_SUPPORTED_MEDIA_TYPES,
+        supportReasoning: true,
+      },
+      {
+        modelId: 'claude-v5.5-opus',
+        label: t('model.claude-v5.5-opus.label'),
+        description: t('model.claude-v5.5-opus.description'),
+        supportMediaType: CLAUDE_SUPPORTED_MEDIA_TYPES,
+        supportReasoning: true,
+      },
+
+      {
         modelId: 'claude-v5-sonnet',
         label: t('model.claude-v5-sonnet.label'),
         description: t('model.claude-v5-sonnet.description'),
