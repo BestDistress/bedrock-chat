@@ -56,6 +56,27 @@ const translation = {
         description:
           'Mô hình Opus hiệu suất cao được xây dựng cho việc lập trình, quy trình doanh nghiệp và các tác vụ agent dài hạn.',
       },
+            'claude-v4.8-opus': {
+        label: 'Claude 4.8 (Opus)',
+        description: 'Opus model optimized for coding, agents, and deeper reasoning.',
+      },
+      'claude-v5-opus': {
+        label: 'Claude 5 (Opus)',
+        description: 'Most advanced Opus model for long-running agents and coding.',
+      },
+      'claude-v5.5-opus': {
+        label: 'Claude 5.5 (Opus)',
+        description: 'Most capable Opus model. Better at coding and knowledge work.',
+      },
+      'claude-v5-sonnet': {
+        label: 'Claude 5 (Sonnet)',
+        description: 'High-performance model balanced for speed and intelligence.',
+      },
+      'claude-v5.5-sonnet': {
+        label: 'Claude 5.5 (Sonnet)',
+        description: 'Latest Sonnet with frontier-level coding skills at lower cost.',
+      },
+
       'claude-v3-opus': {
         label: 'Claude 3 (Opus)',
         description: 'Mô hình mạnh mẽ cho các tác vụ cực kỳ phức tạp.',
