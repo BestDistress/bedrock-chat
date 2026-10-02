@@ -48,6 +48,27 @@ const translation: typeof en = {
         description:
           'コーディング、エンタープライズワークフロー、長時間のエージェントタスク向けに構築された高性能Opusモデル。',
       },
+            'claude-v4.8-opus': {
+        label: 'Claude 4.8 (Opus)',
+        description: 'Opus model optimized for coding, agents, and deeper reasoning.',
+      },
+      'claude-v5-opus': {
+        label: 'Claude 5 (Opus)',
+        description: 'Most advanced Opus model for long-running agents and coding.',
+      },
+      'claude-v5.5-opus': {
+        label: 'Claude 5.5 (Opus)',
+        description: 'Most capable Opus model. Better at coding and knowledge work.',
+      },
+      'claude-v5-sonnet': {
+        label: 'Claude 5 (Sonnet)',
+        description: 'High-performance model balanced for speed and intelligence.',
+      },
+      'claude-v5.5-sonnet': {
+        label: 'Claude 5.5 (Sonnet)',
+        description: 'Latest Sonnet with frontier-level coding skills at lower cost.',
+      },
+
       'claude-v4-sonnet': {
         label: 'Claude 4 (Sonnet)',
         description:
