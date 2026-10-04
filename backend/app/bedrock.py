@@ -1207,6 +1207,7 @@ def generation_params_to_converse_configuration(
                     "additionalModelRequestFields": {
                         "thinking": {
                             "type": "adaptive",
+                            "budget_tokens": 12288,
                         },
                     },
                 }
