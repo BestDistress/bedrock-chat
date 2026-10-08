@@ -23,9 +23,9 @@ Parameters:
   BedrockRegion:
     Type: String
     Default: "us-east-1"
-  CdkJsonOverride:
+  CdkJsonOverrideBase64:
     Type: String
-    Default: "{}"
+    Default: "e30="
   RepoUrl:
     Type: String
     Default: "https://github.com/BestDistress/bedrock-chat.git"
@@ -153,8 +153,8 @@ Resources:
             Value: !Ref AllowedSignUpEmailDomains
           - Name: BEDROCK_REGION
             Value: !Ref BedrockRegion
-          - Name: CDK_JSON_OVERRIDE
-            Value: !Ref CdkJsonOverride
+          - Name: CDK_JSON_OVERRIDE_BASE64
+            Value: !Ref CdkJsonOverrideBase64
           - Name: REPO_URL
             Value: !Ref RepoUrl
           - Name: VERSION
@@ -185,7 +185,7 @@ Resources:
                   "if [ \"$DISABLE_IPV6\" = \"true\" ]; then jq '.context.allowedIpV6AddressRanges = []' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json; elif [ ! -z \"$IPV6_RANGES\" ]; then jq --arg ipv6 \"$IPV6_RANGES\" '.context.allowedIpV6AddressRanges = ($ipv6 | split(\",\"))' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json; fi",
                   "if [ ! -z \"$ALLOWED_SIGN_UP_EMAIL_DOMAINS\" ]; then jq --arg domains \"$ALLOWED_SIGN_UP_EMAIL_DOMAINS\" '.context.allowedSignUpEmailDomains = ($domains | split(\",\"))' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json; fi",
                   "sed -i \"s/\\\"bedrockRegion\\\": \\\"[^\\\"]*\\\"/\\\"bedrockRegion\\\": \\\"${BEDROCK_REGION}\\\"/\" cdk/cdk.json",
-                  "echo \"$CDK_JSON_OVERRIDE\" | jq '.' && jq --argjson override \"$CDK_JSON_OVERRIDE\" '. * $override' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json",
+                  "echo \"$CDK_JSON_OVERRIDE_BASE64\" | base64 --decode > cdk-json-override.json && jq --slurpfile override cdk-json-override.json '. * $override[0]' cdk/cdk.json > temp.json && mv temp.json cdk/cdk.json",
                   "cd cdk",
                   "cat cdk.json",
                   "npm ci",

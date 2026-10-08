@@ -135,7 +135,7 @@ You can specify the following parameters during deployment to enhance security a
 - **--bedrock-region**: Define the region where bedrock is available. (default: us-east-1)
 - **--repo-url**: Repository to deploy. (default: https://github.com/BestDistress/bedrock-chat.git)
 - **--version**: Branch or tag to deploy. (default: v3)
-- **--cdk-json-override**: You can override any CDK context values during deployment using the override JSON block. This allows you to modify the configuration without editing the cdk.json file directly.
+- **--cdk-json-override**: You can override any CDK context values during deployment using a valid JSON object. The script validates and encodes the JSON before passing it to CodeBuild, so multiline JSON can be used without shell/CloudFormation parsing issues.
 
 Example usage:
 

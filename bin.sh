@@ -68,6 +68,11 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
+if ! printf '%s' "$CDK_JSON_OVERRIDE" | jq -e 'type == "object"' > /dev/null; then
+    echo "CDK JSON override must be a valid JSON object"
+    exit 1
+fi
+CDK_JSON_OVERRIDE_BASE64=$(printf '%s' "$CDK_JSON_OVERRIDE" | base64 | tr -d '\n')
 
 # Validate the template
 aws cloudformation validate-template --template-body file://deploy.yml  > /dev/null 2>&1
@@ -91,7 +96,7 @@ aws cloudformation deploy \
     Ipv6Ranges="$IPV6_RANGES" \
     AllowedSignUpEmailDomains="$ALLOWED_SIGN_UP_EMAIL_DOMAINS" \
     BedrockRegion="$BEDROCK_REGION" \
-    CdkJsonOverride="$CDK_JSON_OVERRIDE" \
+    CdkJsonOverrideBase64="$CDK_JSON_OVERRIDE_BASE64" \
     RepoUrl="$REPO_URL" \
     Version="$VERSION"
 

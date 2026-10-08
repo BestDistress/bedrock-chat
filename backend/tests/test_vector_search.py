@@ -1,6 +1,6 @@
 import unittest
-from typing import Literal
 from types import SimpleNamespace
+from typing import Literal
 from unittest.mock import patch
 
 from app.repositories.models.custom_bot_kb import (
@@ -9,7 +9,8 @@ from app.repositories.models.custom_bot_kb import (
     KnowledgeBaseConfiguration,
 )
 from app.repositories.knowledge_base import get_knowledge_base_info
-from app.vector_search import _bedrock_knowledge_base_search
+from app.vector_search import _bedrock_knowledge_base_search, agent_client
+from botocore.validate import ParamValidator
 
 
 def create_bot(knowledge_base_type: Literal["dedicated", "shared"]):
@@ -37,6 +38,26 @@ def create_knowledge_base_info(
 
 
 class TestBedrockKnowledgeBaseSearch(unittest.TestCase):
+    def test_runtime_sdk_accepts_managed_search_configuration(self):
+        operation_model = agent_client.meta.service_model.operation_model("Retrieve")
+        parameters = {
+            "knowledgeBaseId": "kb12345678",
+            "retrievalQuery": {"text": "test query"},
+            "retrievalConfiguration": {
+                "managedSearchConfiguration": {"numberOfResults": 7},
+            },
+        }
+
+        validation_report = ParamValidator().validate(
+            parameters,
+            operation_model.input_shape,
+        )
+
+        self.assertFalse(
+            validation_report.has_errors(),
+            validation_report.generate_report(),
+        )
+
     @patch("app.repositories.knowledge_base.get_bedrock_agent_client")
     def test_get_knowledge_base_info_accepts_managed_type(self, get_client):
         client = get_client.return_value
