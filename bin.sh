@@ -47,8 +47,8 @@ DISABLE_IPV6="false"
 ALLOWED_SIGN_UP_EMAIL_DOMAINS=""
 BEDROCK_REGION="us-east-1"
 CDK_JSON_OVERRIDE="{}"
-REPO_URL="https://github.com/aws-samples/bedrock-chat.git"
-VERSION="v3"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_PREFIX="source-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 
 # Parse command-line arguments for customization
 while [[ "$#" -gt 0 ]]; do
@@ -61,8 +61,6 @@ while [[ "$#" -gt 0 ]]; do
         --bedrock-region) BEDROCK_REGION="$2"; shift ;;
         --allowed-signup-email-domains) ALLOWED_SIGN_UP_EMAIL_DOMAINS="$2"; shift ;;
         --cdk-json-override) CDK_JSON_OVERRIDE="$2"; shift ;;
-        --repo-url) REPO_URL="$2"; shift ;;
-        --version) VERSION="$2"; shift ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
     shift
@@ -70,7 +68,7 @@ done
 
 
 # Validate the template
-aws cloudformation validate-template --template-body file://deploy.yml  > /dev/null 2>&1
+aws cloudformation validate-template --template-body "file://$SCRIPT_DIR/deploy.yml"  > /dev/null 2>&1
 if [[ $? -ne 0 ]]; then
     echo "Template validation failed"
     exit 1
@@ -81,7 +79,7 @@ StackName="CodeBuildForDeploy"
 # Deploy the CloudFormation stack
 aws cloudformation deploy \
   --stack-name $StackName \
-  --template-file deploy.yml \
+  --template-file "$SCRIPT_DIR/deploy.yml" \
   --capabilities CAPABILITY_IAM \
   --parameter-overrides \
     AllowSelfRegister=$ALLOW_SELF_REGISTER \
@@ -92,8 +90,7 @@ aws cloudformation deploy \
     AllowedSignUpEmailDomains="$ALLOWED_SIGN_UP_EMAIL_DOMAINS" \
     BedrockRegion="$BEDROCK_REGION" \
     CdkJsonOverride="$CDK_JSON_OVERRIDE" \
-    RepoUrl="$REPO_URL" \
-    Version="$VERSION"
+    SourcePrefix="$SOURCE_PREFIX"
 
 echo "Waiting for the stack creation to complete..."
 echo "NOTE: this stack contains CodeBuild project which will be used for cdk deploy."
@@ -114,9 +111,34 @@ echo -e "\nDone.\n"
 
 outputs=$(aws cloudformation describe-stacks --stack-name $StackName --query 'Stacks[0].Outputs')
 projectName=$(echo $outputs | jq -r '.[] | select(.OutputKey=="ProjectName").OutputValue')
+sourceBucket=$(echo $outputs | jq -r '.[] | select(.OutputKey=="SourceBucket").OutputValue')
 
-if [[ -z "$projectName" ]]; then
-    echo "Failed to retrieve the CodeBuild project name"
+if [[ "$projectName" == "null" || -z "$projectName" || "$sourceBucket" == "null" || -z "$sourceBucket" ]]; then
+    echo "Failed to retrieve the CodeBuild project or deployment source bucket"
+    exit 1
+fi
+
+echo "Uploading local source from $SCRIPT_DIR..."
+if ! aws s3 sync "$SCRIPT_DIR/" "s3://$sourceBucket/$SOURCE_PREFIX/" --delete \
+  --exclude ".git/*" \
+  --exclude "**/.git/*" \
+  --exclude "**/node_modules/**" \
+  --exclude "**/dist/**" \
+  --exclude "**/dev-dist/**" \
+  --exclude "**/.venv/**" \
+  --exclude "**/__pycache__/**" \
+  --exclude "**/cdk.out/**" \
+  --exclude "**/.vscode/**" \
+  --exclude "**/.mypy_cache/**" \
+  --exclude "**/examples/**" \
+  --exclude "**/docs/**" \
+  --exclude "**/.env" \
+  --exclude "**/.env.local" \
+  --exclude "**/tests/**" \
+  --exclude "**/test/**" \
+  --exclude "**/backend/embedding_statemachine/pdf_ai_ocr/**" \
+  --exclude "**/backend/guardrails/**"; then
+    echo "Failed to upload the local source to s3://$sourceBucket/$SOURCE_PREFIX/"
     exit 1
 fi
 

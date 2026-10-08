@@ -111,7 +111,7 @@ Please make sure that you deploy Bedrock Chat in a region [where OpenSearch Serv
 For the **bedrock-region** parameter you need to choose a region [where Bedrock is available](https://docs.aws.amazon.com/general/latest/gr/bedrock.html).
 
 - Open [CloudShell](https://console.aws.amazon.com/cloudshell/home) at the region where you want to deploy
-- Run deployment via following commands. If you want to specify the version to deploy or need to apply security policies, please specify the appropriate parameters from [Optional Parameters](#optional-parameters).
+- Run deployment via following commands. The script deploys the local working tree, including uncommitted changes. Use the appropriate parameters from [Optional Parameters](#optional-parameters) to apply security policies.
 
 ```sh
 git clone https://github.com/aws-samples/bedrock-chat.git
@@ -133,8 +133,6 @@ You can specify the following parameters during deployment to enhance security a
 - **--disable-ipv6**: Disable connections over IPv6. (default: enabled)
 - **--allowed-signup-email-domains**: Comma-separated list of allowed email domains for sign-up. (default: no domain restriction)
 - **--bedrock-region**: Define the region where bedrock is available. (default: us-east-1)
-- **--repo-url**: The custom repo of Bedrock Chat to deploy, if forked or custom source control. (default: https://github.com/aws-samples/bedrock-chat.git)
-- **--version**: The version of Bedrock Chat to deploy. (default: latest version in development)
 - **--cdk-json-override**: You can override any CDK context values during deployment using the override JSON block. This allows you to modify the configuration without editing the cdk.json file directly.
 
 Example usage:
@@ -179,7 +177,7 @@ The override JSON must follow the same structure as cdk.json. You can override a
 #### Example command with parameters:
 
 ```sh
-./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "us-west-2" --version "v1.2.6"
+./bin.sh --disable-self-register --ipv4-ranges "192.0.2.0/25,192.0.2.128/25" --ipv6-ranges "2001:db8:1:2::/64,2001:db8:1:3::/64" --allowed-signup-email-domains "example.com,anotherexample.com" --bedrock-region "us-west-2"
 ```
 
 - After about 35 minutes, you will get the following output, which you can access from your browser
@@ -196,7 +194,7 @@ The sign-up screen will appear as shown above, where you can register your email
 > Without setting the optional parameter, this deployment method allows anyone who knows the URL to sign up. For production use, it is strongly recommended to add IP address restrictions and disable self-signup to mitigate security risks (you can define allowed-signup-email-domains to restrict users so that only email addresses from your company's domain can sign up). Use both ipv4-ranges and ipv6-ranges for IP address restrictions, and disable self-signup by using disable-self-register when executing ./bin.
 
 > [!TIP]
-> If the `Frontend URL` does not appear or Bedrock Chat does not work properly, it may be a problem with the latest version. In this case, please add `--version "v3.0.0"` to the parameters and try deployment again.
+> If you are deploying a modified copy of Bedrock Chat, verify that the changes are present in your local working tree before running `bin.sh`.
 
 ## Architecture
 
