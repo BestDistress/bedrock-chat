@@ -43,6 +43,7 @@ from app.routes.schemas.conversation import (
 )
 from app.stream import OnStopInput, OnThinking
 from app.usecases.chat import (
+    _initial_conversation_title,
     chat,
     chat_output_from_message,
     fetch_conversation,
@@ -63,6 +64,56 @@ from tests.test_usecases.utils.user_factory import (
 
 MODEL: type_model_name = "claude-v3.5-sonnet"
 MODEL_REASONING: type_model_name = "claude-v3.7-sonnet"
+
+
+class TestInitialConversationTitle(unittest.TestCase):
+    def test_uses_first_text_message_and_normalizes_whitespace(self):
+        message = MessageInput(
+            role="user",
+            content=[
+                TextContent(
+                    content_type="text",
+                    body="  Help me   plan a trip  ",
+                )
+            ],
+            model=MODEL,
+            parent_message_id=None,
+        )
+
+        self.assertEqual(_initial_conversation_title(message), "Help me plan a trip")
+
+    def test_truncates_long_titles(self):
+        message = MessageInput(
+            role="user",
+            content=[
+                TextContent(
+                    content_type="text",
+                    body="A useful title followed by a much longer request that needs truncating",
+                )
+            ],
+            model=MODEL,
+            parent_message_id=None,
+        )
+
+        title = _initial_conversation_title(message)
+        self.assertLessEqual(len(title), 50)
+        self.assertTrue(title.endswith("..."))
+
+    def test_uses_default_title_without_text(self):
+        message = MessageInput(
+            role="user",
+            content=[
+                ImageContent(
+                    content_type="image",
+                    media_type="image/png",
+                    body="aW1hZ2U=",
+                )
+            ],
+            model=MODEL,
+            parent_message_id=None,
+        )
+
+        self.assertEqual(_initial_conversation_title(message), "New conversation")
 
 
 class TestTraceToRoot(unittest.TestCase):

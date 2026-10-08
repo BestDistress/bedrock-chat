@@ -41,6 +41,7 @@ from app.routes.schemas.conversation import (
     Conversation,
     ConversationSearchResult,
     FeedbackOutput,
+    MessageInput,
     MessageOutput,
     SearchHighlight,
     type_model_name,
@@ -145,7 +146,7 @@ def prepare_conversation(
         # Create new conversation
         conversation = ConversationModel(
             id=chat_input.conversation_id,
-            title="New conversation",
+            title=_initial_conversation_title(chat_input.message),
             total_price=0.0,
             create_time=current_time,
             message_map=initial_message_map,
@@ -176,6 +177,22 @@ def prepare_conversation(
         )
 
     return (message_id, conversation, bot)
+
+
+def _initial_conversation_title(message: MessageInput) -> str:
+    text = " ".join(
+        word
+        for content in message.content
+        if content.content_type == "text"
+        for word in content.body.split()
+    )
+    if not text:
+        return "New conversation"
+
+    if len(text) > 50:
+        text = f"{text[:47].rsplit(' ', 1)[0]}..."
+
+    return text
 
 
 def trace_to_root(

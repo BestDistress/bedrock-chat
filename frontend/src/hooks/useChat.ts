@@ -435,16 +435,23 @@ const useChat = () => {
     const createNewConversation = () => {
       // Copy State to prevent screen flicker
       copyMessages('', newConversationId);
+      setConversationId(newConversationId);
 
-      conversationApi
+      const refreshConversations = () => {
+        syncConversations().catch((error) => {
+          console.error('Failed to refresh conversations:', error);
+        });
+      };
+
+      refreshConversations();
+      void conversationApi
         .updateTitleWithGeneratedTitle(newConversationId)
-        .then(() => {
-          setConversationId(newConversationId);
+        .catch((error) => {
+          console.error('Failed to generate conversation title:', error);
         })
         .finally(() => {
-          syncConversations().then(() => {
-            setIsGeneratedTitle(true);
-          });
+          setIsGeneratedTitle(true);
+          refreshConversations();
         });
     };
 
