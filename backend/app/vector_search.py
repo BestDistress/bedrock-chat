@@ -13,7 +13,6 @@ from botocore.exceptions import ClientError
 from mypy_boto3_bedrock_agent_runtime.literals import SearchTypeType
 from mypy_boto3_bedrock_agent_runtime.type_defs import (
     KnowledgeBaseRetrievalResultTypeDef,
-    KnowledgeBaseVectorSearchConfigurationTypeDef,
     RetrieveRequestTypeDef,
 )
 
@@ -72,51 +71,57 @@ def _bedrock_knowledge_base_search(bot: BotModel, query: str) -> list[SearchResu
     assert knowledge_base_id is not None, "knowledge_base_id must be set"
 
     try:
-        # Init retrieve parameter
-        retrieve_parameter: RetrieveRequestTypeDef = {
-            "knowledgeBaseId": knowledge_base_id,
-            "retrievalQuery": {"text": query},
-            "retrievalConfiguration": {
-                "vectorSearchConfiguration": {
-                    "numberOfResults": limit,
-                    "overrideSearchType": search_type,
-                }
-            },
-        }
-        if bot.bedrock_knowledge_base.type == "shared":
-            # Specify the Bot ID as a filter condition for the shared Knowledge Base.
-            retrieve_parameter["retrievalConfiguration"]["vectorSearchConfiguration"]["filter"] = {  # type: ignore
-                "listContains": {
-                    "key": "tenants",
-                    # Note: metadata is attached on cdk/lambda/knowledge-base-custom-transformation/index.ts
-                    "value": f"BOT#{bot.id}",  # type: ignore
-                },
-            }
-
-        # Omit overrideSearchType parameter if needed
-        def omit_override_search_type_parameter(
-            retrieve_parameter: RetrieveRequestTypeDef,
-        ):
-            target_parameter: KnowledgeBaseVectorSearchConfigurationTypeDef = (
-                retrieve_parameter.get("retrievalConfiguration", {}).get(
-                    "vectorSearchConfiguration", {}
-                )
-            )
-            # If overrideSearchType exists, remove it
-            if "overrideSearchType" in target_parameter:
-                del target_parameter["overrideSearchType"]
-
         # Get Knowledge Base from Bedrock Agent API :: get_knowledge_base
         knowledge_base_info = get_knowledge_base_info(
             knowledge_base_id=knowledge_base_id
         )
-        # Check the knowledge base resource type
-        if (
+        knowledge_base_type = (
             knowledge_base_info.knowledge_base.knowledge_base_configuration.type
-            == "KENDRA"
-        ):
-            # Omit overrideSearchType option when the type is "KENDRA"
-            omit_override_search_type_parameter(retrieve_parameter)
+        )
+
+        # Managed knowledge bases require managedSearchConfiguration; vector
+        # knowledge bases use vectorSearchConfiguration.
+        retrieve_parameter: RetrieveRequestTypeDef = {
+            "knowledgeBaseId": knowledge_base_id,
+            "retrievalQuery": {"text": query},
+            "retrievalConfiguration": (
+                {
+                    "managedSearchConfiguration": {
+                        "numberOfResults": limit,
+                    }
+                }
+                if knowledge_base_type == "MANAGED"
+                else {
+                    "vectorSearchConfiguration": {
+                        "numberOfResults": limit,
+                        "overrideSearchType": search_type,
+                    }
+                }
+            ),
+        }
+        if bot.bedrock_knowledge_base.type == "shared":
+            # Specify the Bot ID as a filter condition for the shared Knowledge Base.
+            filter_parameter = {
+                "listContains": {
+                    "key": "tenants",
+                    # Note: metadata is attached on cdk/lambda/knowledge-base-custom-transformation/index.ts
+                    "value": f"BOT#{bot.id}",
+                },
+            }
+            if knowledge_base_type == "MANAGED":
+                retrieve_parameter["retrievalConfiguration"][
+                    "managedSearchConfiguration"
+                ]["filter"] = filter_parameter
+            else:
+                retrieve_parameter["retrievalConfiguration"][
+                    "vectorSearchConfiguration"
+                ]["filter"] = filter_parameter
+
+        # Omit overrideSearchType parameter when the type is "KENDRA"
+        if knowledge_base_type == "KENDRA":
+            del retrieve_parameter["retrievalConfiguration"][
+                "vectorSearchConfiguration"
+            ]["overrideSearchType"]
 
         # Send retrieve request
         response = agent_client.retrieve(**retrieve_parameter)

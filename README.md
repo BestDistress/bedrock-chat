@@ -32,7 +32,7 @@ Add your own instruction and knowledge (a.k.a [RAG](https://aws.amazon.com/what-
 ![](./docs/imgs/bot_store.png)
 ![](./docs/imgs/bot_api_publish_screenshot3.png)
 
-You can also import existing [Amazon Bedrock's KnowledgeBase](https://aws.amazon.com/bedrock/knowledge-bases/).
+You can also import existing [Amazon Bedrock Knowledge Bases](https://aws.amazon.com/bedrock/knowledge-bases/), including managed knowledge bases.
 
 ![](./docs/imgs/import_existing_kb.png)
 
